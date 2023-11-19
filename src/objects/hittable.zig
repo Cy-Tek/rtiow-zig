@@ -1,9 +1,9 @@
-const vec = @import("../vec.zig");
-const ray = @import("../ray.zig");
+const c = @import("../common.zig");
 
-const Point3 = vec.Point3;
-const Vec3 = vec.Vec3;
-const Ray = ray.Ray;
+const Interval = c.Interval;
+const Point3 = c.Point3;
+const Vec3 = c.Vec3;
+const Ray = c.Ray;
 
 const Hittable = @This();
 
@@ -23,16 +23,16 @@ pub const HitRecord = struct {
 };
 
 ptr: *anyopaque,
-hitFn: *const fn (ptr: *anyopaque, r: Ray, ray_tmin: f64, ray_tmax: f64) ?HitRecord,
+hitFn: *const fn (ptr: *anyopaque, r: Ray, ray_t: Interval) ?HitRecord,
 
 pub fn init(ptr: anytype) Hittable {
     const T = @TypeOf(ptr);
     const ptr_info = @typeInfo(T);
 
     const gen = struct {
-        pub fn hit(pointer: *anyopaque, r: Ray, ray_tmin: f64, ray_tmax: f64) ?HitRecord {
+        pub fn hit(pointer: *anyopaque, r: Ray, ray_t: Interval) ?HitRecord {
             const self: T = @ptrCast(@alignCast(pointer));
-            return ptr_info.Pointer.child.hit(self, r, ray_tmin, ray_tmax);
+            return ptr_info.Pointer.child.hit(self, r, ray_t);
         }
     };
 
@@ -42,6 +42,6 @@ pub fn init(ptr: anytype) Hittable {
     };
 }
 
-pub fn hit(self: Hittable, r: Ray, ray_tmin: f64, ray_tmax: f64) ?HitRecord {
-    return self.hitFn(self.ptr, r, ray_tmin, ray_tmax);
+pub fn hit(self: Hittable, r: Ray, ray_t: Interval) ?HitRecord {
+    return self.hitFn(self.ptr, r, ray_t);
 }

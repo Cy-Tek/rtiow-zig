@@ -1,7 +1,8 @@
 const std = @import("std");
-const ray = @import("../ray.zig");
+const c = @import("../common.zig");
 
-const Ray = ray.Ray;
+const Interval = c.Interval;
+const Ray = c.Ray;
 const Hittable = @import("hittable.zig");
 const HitRecord = Hittable.HitRecord;
 const HittableList = @This();
@@ -18,12 +19,12 @@ pub fn add(self: *HittableList, object: Hittable) !void {
     try self.objects.append(object);
 }
 
-pub fn hit(self: *HittableList, r: Ray, ray_tmin: f64, ray_tmax: f64) ?HitRecord {
-    var closest_so_far = ray_tmax;
+pub fn hit(self: *HittableList, r: Ray, ray_t: Interval) ?HitRecord {
+    var closest_so_far = ray_t.max;
     var temp_rec: ?HitRecord = null;
 
     for (self.objects.items) |*item| {
-        if (item.hit(r, ray_tmin, closest_so_far)) |rec| {
+        if (item.hit(r, Interval.init(ray_t.min, closest_so_far))) |rec| {
             closest_so_far = rec.t;
             temp_rec = rec;
         }

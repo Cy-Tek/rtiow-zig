@@ -1,15 +1,15 @@
 const std = @import("std");
-const vec = @import("vec.zig");
 const color = @import("color.zig");
-const ray = @import("ray.zig");
+const c = @import("common.zig");
 
 const Hittable = @import("objects/hittable.zig");
 const HittableList = @import("objects/hittable_list.zig");
 const Sphere = @import("objects/sphere.zig");
-const Ray = ray.Ray;
+const Ray = c.Ray;
 const Color = color.Color;
-const Vec3 = vec.Vec3;
-const Point3 = vec.Point3;
+const Vec3 = c.Vec3;
+const Point3 = c.Point3;
+const Interval = c.Interval;
 
 const aspect_ratio: f64 = 16.0 / 9.0;
 const image_width = 400;
@@ -79,8 +79,8 @@ pub fn main() !void {
             const ray_direction = pixel_center.sub(camera_center);
             const r = Ray{ .origin = camera_center, .direction = ray_direction };
 
-            const c = rayColor(r, world.hittable());
-            try color.write(stdout, c);
+            const col = rayColor(r, world.hittable());
+            try color.write(stdout, col);
         }
     }
 
@@ -89,7 +89,7 @@ pub fn main() !void {
 }
 
 fn rayColor(r: Ray, world: Hittable) Color {
-    if (world.hit(r, 0, std.math.inf(f64))) |rec| {
+    if (world.hit(r, Interval.init(0, c.infinity))) |rec| {
         return rec.normal.add(.{ .x = 1, .y = 1, .z = 1 }).mulScalar(0.5);
     }
 

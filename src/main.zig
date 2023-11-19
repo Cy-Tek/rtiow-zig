@@ -3,6 +3,9 @@ const vec = @import("vec.zig");
 const color = @import("color.zig");
 const ray = @import("ray.zig");
 
+const Hittable = @import("objects/hittable.zig");
+const HittableList = @import("objects/hittable_list.zig");
+const Sphere = @import("objects/sphere.zig");
 const Ray = ray.Ray;
 const Color = color.Color;
 const Vec3 = vec.Vec3;
@@ -43,6 +46,25 @@ pub fn main() !void {
     var bw = std.io.bufferedWriter(stdout_file);
     const stdout = bw.writer();
 
+    // Allocator setup
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer {
+        const deinit_status = gpa.deinit();
+        //fail test; can't try in defer as defer is executed after we return
+        if (deinit_status == .leak) @panic("TEST FAIL");
+    }
+
+    // World
+    var world = HittableList.init(allocator);
+    defer world.deinit();
+
+    var sphere1 = Sphere{ .center = .{ .z = -1 }, .radius = 0.5 };
+    var sphere2 = Sphere{ .center = .{ .y = -100.5, .z = -1 }, .radius = 100 };
+
+    try world.add(sphere1.hittable());
+    try world.add(sphere2.hittable());
+
     // Render the image
     try stdout.print("P3\n{d} {d}\n255\n", .{ image_width, image_height }); // Metadata
 
@@ -57,22 +79,18 @@ pub fn main() !void {
             const ray_direction = pixel_center.sub(camera_center);
             const r = Ray{ .origin = camera_center, .direction = ray_direction };
 
-            const c = rayColor(r);
+            const c = rayColor(r, world.hittable());
             try color.write(stdout, c);
         }
     }
 
     std.log.info("\rDone.                        \n", .{});
-
-    try bw.flush(); // don't forget to flush!
+    try bw.flush();
 }
 
-fn rayColor(r: Ray) Color {
-    const t = hitSphere(Point3{ .z = -1 }, 0.5, r);
-    if (t > 0.0) {
-        const n = r.at(t).sub(Vec3{ .z = -1 }).unit();
-        const c = Color{ .x = n.x + 1, .y = n.y + 1, .z = n.z + 1 };
-        return c.mulScalar(0.5);
+fn rayColor(r: Ray, world: Hittable) Color {
+    if (world.hit(r, 0, std.math.inf(f64))) |rec| {
+        return rec.normal.add(.{ .x = 1, .y = 1, .z = 1 }).mulScalar(0.5);
     }
 
     const unit_direction = r.direction.unit();
@@ -81,18 +99,4 @@ fn rayColor(r: Ray) Color {
     const blue = Color{ .x = 0.5, .y = 0.7, .z = 1 };
 
     return white.mulScalar(1 - a).add(blue.mulScalar(a));
-}
-
-fn hitSphere(center: Point3, radius: f64, r: Ray) f64 {
-    const oc = r.origin.sub(center);
-    const a = r.direction.lengthSquared();
-    const b = 2.0 * oc.dot(r.direction);
-    const c = oc.dot(oc) - radius * radius;
-    const discriminant = b * b - 4 * a * c;
-
-    if (discriminant < 0) {
-        return -1.0;
-    } else {
-        return (-b - @sqrt(discriminant)) / (2.0 * a);
-    }
 }

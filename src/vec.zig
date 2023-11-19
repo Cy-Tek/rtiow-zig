@@ -74,11 +74,6 @@ pub const Vec3 = extern struct {
     }
 };
 
-pub fn writeAsColor(writer: anytype, color: Vec3) !void {
-    const rgb = color.mulScalar(255); // convert from 0.0-1.0 to 0.0-255.999
-    try writer.print("{d:.0} {d:.0} {d:.0}\n", .{ rgb.x, rgb.y, rgb.z });
-}
-
 export fn getVec(vec: *Vec3, index: u8) f64 {
     return vec.at(index);
 }

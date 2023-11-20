@@ -103,7 +103,9 @@ fn getRay(self: *Camera, i: usize, j: usize) Ray {
 fn pixelSampleSquare(self: *Camera) Vec3 {
     const px = -0.5 + self.rng.float();
     const py = -0.5 + self.rng.float();
-    return self.pixel_delta_u
+
+    return self
+        .pixel_delta_u
         .mulScalar(px)
         .add(self.pixel_delta_v.mulScalar(py));
 }

@@ -1,7 +1,9 @@
 const std = @import("std");
+const c = @import("common.zig");
 const ReduceOp = std.builtin.ReduceOp;
 
 const VecSimd = @Vector(3, f64);
+const Random = c.Random;
 
 pub const Point3 = Vec3;
 pub const Vec3 = extern struct {
@@ -71,6 +73,43 @@ pub const Vec3 = extern struct {
 
     pub inline fn unit(self: Vec3) Vec3 {
         return self.divScalar(self.length());
+    }
+
+    pub inline fn randomInUnitSphere(rng: *Random) Vec3 {
+        var p: Vec3 = undefined;
+        while (true) {
+            p = Vec3.randomInRange(rng, -1, 1);
+            if (p.lengthSquared() < 1)
+                return p;
+        }
+    }
+
+    pub inline fn randomUnitVector(rng: *Random) Vec3 {
+        const temp = Vec3.randomInUnitSphere(rng).unit();
+
+        std.log.debug("Unit Sphere: {any}\n", .{temp});
+        return temp;
+    }
+
+    pub inline fn randomOnHemisphere(rng: *Random, normal: Vec3) Vec3 {
+        const on_unit_sphere = Vec3.randomUnitVector(rng);
+        return if (on_unit_sphere.dot(normal) > 0) on_unit_sphere else on_unit_sphere.neg();
+    }
+
+    pub fn random(rng: *Random) Vec3 {
+        return Vec3{
+            .x = rng.float(),
+            .y = rng.float(),
+            .z = rng.float(),
+        };
+    }
+
+    pub fn randomInRange(rng: *Random, min: f64, max: f64) Vec3 {
+        return Vec3{
+            .x = rng.floatInRange(min, max),
+            .y = rng.floatInRange(min, max),
+            .z = rng.floatInRange(min, max),
+        };
     }
 };
 

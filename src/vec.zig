@@ -85,10 +85,7 @@ pub const Vec3 = extern struct {
     }
 
     pub inline fn randomUnitVector(rng: *Random) Vec3 {
-        const temp = Vec3.randomInUnitSphere(rng).unit();
-
-        std.log.debug("Unit Sphere: {any}\n", .{temp});
-        return temp;
+        return Vec3.randomInUnitSphere(rng).unit();
     }
 
     pub inline fn randomOnHemisphere(rng: *Random, normal: Vec3) Vec3 {

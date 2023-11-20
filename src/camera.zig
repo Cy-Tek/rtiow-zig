@@ -34,7 +34,7 @@ pub fn render(self: *Camera, world: anytype) !void {
             var pixel_color = Color{};
             for (0..self.samples_per_pixel) |_| {
                 const r = self.getRay(i, j);
-                pixel_color = pixel_color.add(Camera.rayColor(r, world.hittable()));
+                pixel_color = pixel_color.add(Camera.rayColor(&self.rng, r, world.hittable()));
             }
 
             try color.write(stdout, pixel_color, self.samples_per_pixel);
@@ -110,9 +110,10 @@ fn pixelSampleSquare(self: *Camera) Vec3 {
         .add(self.pixel_delta_v.mulScalar(py));
 }
 
-fn rayColor(r: c.Ray, world: Hittable) Color {
+fn rayColor(rng: *Random, r: c.Ray, world: Hittable) Color {
     if (world.hit(r, c.Interval.init(0, c.infinity))) |rec| {
-        return rec.normal.add(.{ .x = 1, .y = 1, .z = 1 }).mulScalar(0.5);
+        const direction = Vec3.randomOnHemisphere(rng, rec.normal);
+        return rayColor(rng, Ray{ .origin = rec.p, .direction = direction }, world).mulScalar(0.5);
     }
 
     const unit_direction = r.direction.unit();

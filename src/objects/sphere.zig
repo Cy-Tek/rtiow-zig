@@ -4,12 +4,14 @@ const Self = @This();
 const Point3 = c.Point3;
 const Ray = c.Ray;
 const Interval = c.Interval;
+const Material = @import("../material.zig").Material;
 
 const Hittable = @import("hittable.zig");
 const HitRecord = Hittable.HitRecord;
 
 center: Point3,
 radius: f64,
+mat: Material,
 
 pub fn hit(self: *Self, r: Ray, ray_t: c.Interval) ?HitRecord {
     const oc = r.origin.sub(self.center);
@@ -32,6 +34,7 @@ pub fn hit(self: *Self, r: Ray, ray_t: c.Interval) ?HitRecord {
     var rec = HitRecord{
         .p = r.at(root),
         .t = root,
+        .mat = self.mat,
     };
 
     const outward_normal = rec.p.sub(self.center).divScalar(self.radius);

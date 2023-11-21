@@ -10,15 +10,17 @@ const Color = color.Color;
 const Ray = c.Ray;
 const Random = c.Random;
 
+var rng = &c.random;
+
 asepct_ratio: f64 = 1.0,
 image_width: u32 = 100,
 samples_per_pixel: u32 = 10,
+max_depth: u32 = 10,
 image_height: u32,
 center: Point3,
 pixel00_loc: Point3,
 pixel_delta_u: Vec3,
 pixel_delta_v: Vec3,
-rng: Random,
 
 pub fn render(self: *Camera, world: anytype) !void {
     const stdout_file = std.io.getStdOut().writer();
@@ -39,7 +41,7 @@ pub fn render(self: *Camera, world: anytype) !void {
             var pixel_color = Color{};
             for (0..self.samples_per_pixel) |_| {
                 const r = self.getRay(i, j);
-                pixel_color = pixel_color.add(Camera.rayColor(&self.rng, r, world.hittable()));
+                pixel_color = pixel_color.add(rayColor(r, self.max_depth, world.hittable()));
             }
 
             try color.write(stdout, pixel_color, self.samples_per_pixel);
@@ -60,7 +62,9 @@ pub fn init(aspect_ratio: f64, image_width: u32, samples_per_pixel: u32) Camera 
     // Camera settings
     const focal_length = 1.0;
     const viewport_height = 2.0;
-    const viewport_width: f64 = viewport_height * (@as(f64, @floatFromInt(image_width)) / @as(f64, @floatFromInt(image_height)));
+    const viewport_width: f64 = viewport_height *
+        @as(f64, @floatFromInt(image_width)) /
+        @as(f64, @floatFromInt(image_height));
     const camera_center = Point3{};
 
     // Calculate the vectors across the horizontal and down the vertical viewport edges
@@ -78,8 +82,6 @@ pub fn init(aspect_ratio: f64, image_width: u32, samples_per_pixel: u32) Camera 
         .sub(viewport_v.divScalar(2));
     const pixel00_loc = viewport_upper_left.add(pixel_delta_u.add(pixel_delta_v).mulScalar(0.5));
 
-    const rng = Random.init(@intCast(std.time.timestamp()));
-
     return Camera{
         .asepct_ratio = aspect_ratio,
         .image_width = image_width,
@@ -88,7 +90,6 @@ pub fn init(aspect_ratio: f64, image_width: u32, samples_per_pixel: u32) Camera 
         .pixel00_loc = pixel00_loc,
         .pixel_delta_u = pixel_delta_u,
         .pixel_delta_v = pixel_delta_v,
-        .rng = rng,
         .samples_per_pixel = samples_per_pixel,
     };
 }
@@ -106,8 +107,8 @@ fn getRay(self: *Camera, i: usize, j: usize) Ray {
 }
 
 fn pixelSampleSquare(self: *Camera) Vec3 {
-    const px = -0.5 + self.rng.float();
-    const py = -0.5 + self.rng.float();
+    const px = -0.5 + rng.float();
+    const py = -0.5 + rng.float();
 
     return self
         .pixel_delta_u
@@ -115,10 +116,19 @@ fn pixelSampleSquare(self: *Camera) Vec3 {
         .add(self.pixel_delta_v.mulScalar(py));
 }
 
-fn rayColor(rng: *Random, r: c.Ray, world: Hittable) Color {
-    if (world.hit(r, c.Interval.init(0, c.infinity))) |rec| {
-        const direction = Vec3.randomOnHemisphere(rng, rec.normal);
-        return rayColor(rng, Ray{ .origin = rec.p, .direction = direction }, world).mulScalar(0.5);
+fn rayColor(r: c.Ray, depth: u32, world: Hittable) Color {
+    if (depth <= 0) return Color{};
+
+    var record = world.hit(r, c.Interval.init(0.001, c.infinity));
+    if (record) |rec| {
+        var scattered: Ray = undefined;
+        var attenuation: Color = undefined;
+        var mat = rec.mat;
+
+        if (mat.scatter(r, rec, &attenuation, &scattered))
+            return rayColor(scattered, depth - 1, world).mul(attenuation);
+
+        return Color{};
     }
 
     const unit_direction = r.direction.unit();

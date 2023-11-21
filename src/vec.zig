@@ -5,6 +5,8 @@ const ReduceOp = std.builtin.ReduceOp;
 const VecSimd = @Vector(3, f64);
 const Random = c.Random;
 
+var rng = &c.random;
+
 pub const Point3 = Vec3;
 pub const Vec3 = extern struct {
     x: f64 = 0,
@@ -51,6 +53,7 @@ pub const Vec3 = extern struct {
         return fromSimd(self.toSimd() * other.toSimd());
     }
 
+    /// Multiplies a vector against a scalar value and returns the resulting vector
     pub inline fn mulScalar(self: Vec3, scalar: f64) Vec3 {
         return fromSimd(@as(VecSimd, @splat(scalar)) * self.toSimd());
     }
@@ -75,25 +78,34 @@ pub const Vec3 = extern struct {
         return self.divScalar(self.length());
     }
 
-    pub inline fn randomInUnitSphere(rng: *Random) Vec3 {
+    pub inline fn randomInUnitSphere() Vec3 {
         var p: Vec3 = undefined;
         while (true) {
-            p = Vec3.randomInRange(rng, -1, 1);
+            p = Vec3.randomInRange(-1, 1);
             if (p.lengthSquared() < 1)
                 return p;
         }
     }
 
-    pub inline fn randomUnitVector(rng: *Random) Vec3 {
-        return Vec3.randomInUnitSphere(rng).unit();
+    pub inline fn nearZero(self: Vec3) bool {
+        const s = 1e-8;
+        return @abs(self.x) < s and @abs(self.y) < s and @abs(self.z) < s;
     }
 
-    pub inline fn randomOnHemisphere(rng: *Random, normal: Vec3) Vec3 {
-        const on_unit_sphere = Vec3.randomUnitVector(rng);
+    pub inline fn reflect(self: Vec3, normal: Vec3) Vec3 {
+        return self.sub(normal.mulScalar(2 * self.dot(normal)));
+    }
+
+    pub inline fn randomUnitVector() Vec3 {
+        return Vec3.randomInUnitSphere().unit();
+    }
+
+    pub inline fn randomOnHemisphere(normal: Vec3) Vec3 {
+        const on_unit_sphere = Vec3.randomUnitVector();
         return if (on_unit_sphere.dot(normal) > 0) on_unit_sphere else on_unit_sphere.neg();
     }
 
-    pub fn random(rng: *Random) Vec3 {
+    pub fn random() Vec3 {
         return Vec3{
             .x = rng.float(),
             .y = rng.float(),
@@ -101,7 +113,7 @@ pub const Vec3 = extern struct {
         };
     }
 
-    pub fn randomInRange(rng: *Random, min: f64, max: f64) Vec3 {
+    pub fn randomInRange(min: f64, max: f64) Vec3 {
         return Vec3{
             .x = rng.floatInRange(min, max),
             .y = rng.floatInRange(min, max),

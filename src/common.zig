@@ -2,8 +2,9 @@ const std = @import("std");
 
 pub const infinity = std.math.inf(f64);
 pub const pi = std.math.pi;
-pub const Interval = @import("interval.zig");
+pub var random: Random = undefined;
 
+pub const Interval = @import("interval.zig");
 pub const Random = struct {
     prng: std.rand.DefaultPrng,
 

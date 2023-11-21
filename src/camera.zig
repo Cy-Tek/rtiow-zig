@@ -25,11 +25,16 @@ pub fn render(self: *Camera, world: anytype) !void {
     var bw = std.io.bufferedWriter(stdout_file);
     const stdout = bw.writer();
 
+    // We want this to print every line we pass into it, so no need for the overhead
+    // of a buffered Writer
+    const stderr = std.io.getStdErr().writer();
+
     // Render the image
     try stdout.print("P3\n{d} {d}\n255\n", .{ self.image_width, self.image_height }); // Metadata
 
     for (0..self.image_height) |j| {
-        std.log.info("\rScanlines remaining: {d} ", .{(self.image_height - j)});
+        try stderr.print("\rScanlines remaining: {d} ", .{(self.image_height - j)});
+
         for (0..self.image_width) |i| {
             var pixel_color = Color{};
             for (0..self.samples_per_pixel) |_| {
@@ -41,7 +46,7 @@ pub fn render(self: *Camera, world: anytype) !void {
         }
     }
 
-    std.log.info("\rDone.                        \n", .{});
+    try stderr.print("\rDone.                        \n", .{});
     try bw.flush();
 }
 

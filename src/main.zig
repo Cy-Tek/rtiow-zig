@@ -39,15 +39,16 @@ pub fn main() !void {
     const material_left = Metal.init(.{ .x = 0.8, .y = 0.8, .z = 0.8 }, 0.3);
     const material_right = Metal.init(.{ .x = 0.8, .y = 0.6, .z = 0.2 }, 1);
 
-    var sphere1 = Sphere{ .center = .{ .z = -1 }, .radius = 0.5, .mat = material_center };
-    var sphere2 = Sphere{ .center = .{ .y = -100.5, .z = -1 }, .radius = 100, .mat = material_ground };
-    var sphere3 = Sphere{ .center = .{ .x = -1, .z = -1 }, .radius = 0.5, .mat = material_left };
-    var sphere4 = Sphere{ .center = .{ .x = 1, .z = -1 }, .radius = 0.5, .mat = material_right };
+    var spheres = [_]Sphere{
+        Sphere.init(.{ .z = -1 }, 0.5, material_center),
+        Sphere.init(.{ .y = -100.5, .z = -1 }, 100, material_ground),
+        Sphere.init(.{ .x = -1, .z = -1 }, 0.5, material_left),
+        Sphere.init(.{ .x = 1, .z = -1 }, 0.5, material_right),
+    };
 
-    try world.add(sphere1.hittable());
-    try world.add(sphere2.hittable());
-    try world.add(sphere3.hittable());
-    try world.add(sphere4.hittable());
+    for (&spheres) |*sphere| {
+        try world.add(sphere.hittable());
+    }
 
     // Render the image
     var camera = Camera.init(16.0 / 9.0, 400, 500);

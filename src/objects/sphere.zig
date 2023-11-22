@@ -13,6 +13,10 @@ center: Point3,
 radius: f64,
 mat: Material,
 
+pub fn init(center: Point3, radius: f64, mat: Material) Self {
+    return Self{ .center = center, .radius = radius, .mat = mat };
+}
+
 pub fn hit(self: *Self, r: Ray, ray_t: c.Interval) ?HitRecord {
     const oc = r.origin.sub(self.center);
     const a = r.direction.lengthSquared();

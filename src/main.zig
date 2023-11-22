@@ -50,7 +50,7 @@ pub fn main() !void {
     try world.add(sphere4.hittable());
 
     // Render the image
-    var camera = Camera.init(16.0 / 9.0, 1920, 500);
+    var camera = Camera.init(16.0 / 9.0, 400, 500);
     camera.max_depth = 50;
 
     try camera.render(&world);

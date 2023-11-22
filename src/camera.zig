@@ -120,10 +120,10 @@ fn rayColor(r: c.Ray, depth: u32, world: Hittable) Color {
     if (depth <= 0) return Color{};
 
     var record = world.hit(r, c.Interval.init(0.001, c.infinity));
-    if (record) |rec| {
+    if (record) |*rec| {
         var scattered: Ray = undefined;
         var attenuation: Color = undefined;
-        var mat = rec.mat;
+        var mat = &rec.mat;
 
         if (mat.scatter(r, rec, &attenuation, &scattered))
             return rayColor(scattered, depth - 1, world).mul(attenuation);

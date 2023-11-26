@@ -42,7 +42,11 @@ pub const Vec3 = extern struct {
     }
 
     pub inline fn add(self: Vec3, other: Vec3) Vec3 {
-        return fromSimd(self.toSimd() + other.toSimd());
+        return Vec3{
+            .x = self.x + other.x,
+            .y = self.y + other.y,
+            .z = self.z + other.z,
+        };
     }
 
     pub inline fn sub(self: Vec3, other: Vec3) Vec3 {
@@ -50,12 +54,16 @@ pub const Vec3 = extern struct {
     }
 
     pub inline fn mul(self: Vec3, other: Vec3) Vec3 {
-        return fromSimd(self.toSimd() * other.toSimd());
+        return Vec3{ .x = self.x * other.x, .y = self.y * other.y, .z = self.z * other.z };
     }
 
     /// Multiplies a vector against a scalar value and returns the resulting vector
     pub inline fn mulScalar(self: Vec3, scalar: f64) Vec3 {
-        return fromSimd(@as(VecSimd, @splat(scalar)) * self.toSimd());
+        return Vec3{
+            .x = self.x * scalar,
+            .y = self.y * scalar,
+            .z = self.z * scalar,
+        };
     }
 
     pub inline fn divScalar(self: Vec3, scalar: f64) Vec3 {
@@ -67,11 +75,13 @@ pub const Vec3 = extern struct {
     }
 
     pub inline fn lengthSquared(self: Vec3) f64 {
-        return @reduce(ReduceOp.Add, self.toSimd() * self.toSimd());
+        const self_squared = self.mul(self);
+        return self_squared.x + self_squared.y + self_squared.z;
     }
 
     pub inline fn dot(self: Vec3, other: Vec3) f64 {
-        return @reduce(ReduceOp.Add, self.mul(other).toSimd());
+        const product = self.mul(other);
+        return product.x + product.y + product.z;
     }
 
     pub inline fn unit(self: Vec3) Vec3 {
@@ -94,6 +104,14 @@ pub const Vec3 = extern struct {
 
     pub inline fn reflect(self: Vec3, normal: Vec3) Vec3 {
         return self.sub(normal.mulScalar(2 * self.dot(normal)));
+    }
+
+    pub fn refraction(self: Vec3, other: Vec3, etai_over_etat: f64) Vec3 {
+        const cos_theta = @min(dot(self.neg(), other), 1);
+        const r_out_perp = self.add(other.mulScalar(cos_theta)).mulScalar(etai_over_etat);
+        const r_out_parallel = other.mulScalar(-@sqrt(@abs(1.0 - r_out_perp.lengthSquared())));
+
+        return r_out_parallel.add(r_out_perp);
     }
 
     pub inline fn randomUnitVector() Vec3 {

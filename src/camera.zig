@@ -1,5 +1,6 @@
 const std = @import("std");
 const Hittable = @import("objects/hittable.zig");
+const HittableList = @import("objects/hittable_list.zig");
 const c = @import("common.zig");
 const color = @import("color.zig");
 
@@ -22,7 +23,7 @@ pixel00_loc: Point3,
 pixel_delta_u: Vec3,
 pixel_delta_v: Vec3,
 
-pub fn render(self: *Camera, world: anytype) !void {
+pub fn render(self: *Camera, world: HittableList) !void {
     const stdout_file = std.io.getStdOut().writer();
     var bw = std.io.bufferedWriter(stdout_file);
     const stdout = bw.writer();
@@ -41,7 +42,7 @@ pub fn render(self: *Camera, world: anytype) !void {
             var pixel_color = Color{};
             for (0..self.samples_per_pixel) |_| {
                 const r = self.getRay(i, j);
-                pixel_color = pixel_color.add(rayColor(r, self.max_depth, world.hittable()));
+                pixel_color = pixel_color.add(rayColor(r, self.max_depth, world));
             }
 
             try color.write(stdout, pixel_color, self.samples_per_pixel);
@@ -116,7 +117,7 @@ fn pixelSampleSquare(self: *Camera) Vec3 {
         .add(self.pixel_delta_v.mulScalar(py));
 }
 
-fn rayColor(r: c.Ray, depth: u32, world: Hittable) Color {
+fn rayColor(r: c.Ray, depth: u32, world: HittableList) Color {
     if (depth <= 0) return Color{};
 
     var record = world.hit(r, c.Interval.init(0.001, c.infinity));

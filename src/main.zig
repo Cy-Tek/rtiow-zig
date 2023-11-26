@@ -46,13 +46,13 @@ pub fn main() !void {
         Sphere.init(.{ .x = 1, .z = -1 }, 0.5, material_right),
     };
 
-    for (&spheres) |*sphere| {
-        try world.add(sphere.hittable());
+    for (spheres) |sphere| {
+        try world.add_sphere(sphere);
     }
 
     // Render the image
     var camera = Camera.init(16.0 / 9.0, 400, 500);
     camera.max_depth = 50;
 
-    try camera.render(&world);
+    try camera.render(world);
 }

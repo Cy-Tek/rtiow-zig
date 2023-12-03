@@ -6,6 +6,7 @@ const material = @import("material.zig");
 const Material = material.Material;
 const Diffuse = material.Lambertian;
 const Metal = material.Metal;
+const Dielectric = material.Dielectric;
 
 const Camera = @import("camera.zig");
 const Hittable = @import("objects/hittable.zig");
@@ -34,15 +35,16 @@ pub fn main() !void {
     var world = HittableList.init(allocator);
     defer world.deinit();
 
-    const material_ground = Diffuse.init(.{ .x = 0.8, .y = 0.8, .z = 0 });
-    const material_center = Diffuse.init(.{ .x = 0.7, .y = 0.3, .z = 0.3 });
-    const material_left = Metal.init(.{ .x = 0.8, .y = 0.8, .z = 0.8 }, 0.3);
-    const material_right = Metal.init(.{ .x = 0.8, .y = 0.6, .z = 0.2 }, 1);
+    const material_ground = Diffuse.init(0.8, 0.8, 0);
+    const material_center = Diffuse.init(0.1, 0.2, 0.5);
+    const material_left = Dielectric.init(1.5);
+    const material_right = Metal.init(.{ .x = 0.8, .y = 0.6, .z = 0.2 }, 0);
 
-    var spheres = [_]Sphere{
+    const spheres = [_]Sphere{
         Sphere.init(.{ .z = -1 }, 0.5, material_center),
         Sphere.init(.{ .y = -100.5, .z = -1 }, 100, material_ground),
         Sphere.init(.{ .x = -1, .z = -1 }, 0.5, material_left),
+        Sphere.init(.{ .x = -1, .z = -1 }, -0.4, material_left),
         Sphere.init(.{ .x = 1, .z = -1 }, 0.5, material_right),
     };
 
@@ -51,7 +53,7 @@ pub fn main() !void {
     }
 
     // Render the image
-    var camera = Camera.init(16.0 / 9.0, 400, 500);
+    var camera = Camera.init(16.0 / 9.0, 400, 100);
     camera.max_depth = 50;
 
     try camera.render(world);

@@ -19,7 +19,7 @@ pub fn add_sphere(self: *HittableList, sphere: Sphere) !void {
     try self.spheres.append(sphere);
 }
 
-pub fn hit(self: HittableList, r: Ray, ray_t: Interval) ?HitRecord {
+pub inline fn hit(self: HittableList, r: Ray, ray_t: Interval) ?HitRecord {
     var closest_so_far = ray_t.max;
     var temp_rec: ?HitRecord = null;
 

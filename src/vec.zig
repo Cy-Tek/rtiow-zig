@@ -17,14 +17,6 @@ pub const Vec3 = extern struct {
         return @bitCast(self);
     }
 
-    pub inline fn toSimd(self: Vec3) VecSimd {
-        return @bitCast(self);
-    }
-
-    pub inline fn fromSimd(simd: VecSimd) Vec3 {
-        return @bitCast(simd);
-    }
-
     pub inline fn toSlice(self: *Vec3) []f64 {
         return std.mem.bytesAsSlice(f64, std.mem.asBytes(self));
     }
@@ -139,15 +131,3 @@ pub const Vec3 = extern struct {
         };
     }
 };
-
-export fn getVec(vec: *Vec3, index: u8) f64 {
-    return vec.at(index);
-}
-
-const testing = std.testing;
-test "To array" {
-    const v = Vec3{};
-    const arr = v.toArray();
-
-    try testing.expectEqual([3]f64{ 0, 0, 0 }, arr);
-}

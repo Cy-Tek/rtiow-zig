@@ -76,6 +76,14 @@ pub const Vec3 = extern struct {
         return product.x + product.y + product.z;
     }
 
+    pub inline fn cross(self: Vec3, other: Vec3) Vec3 {
+        return Vec3{
+            .x = other.y * self.z - other.z * self.y,
+            .y = other.z * self.x - other.x * self.z,
+            .z = other.x * self.y - other.y * self.x,
+        };
+    }
+
     pub inline fn unit(self: Vec3) Vec3 {
         return self.divScalar(self.length());
     }
@@ -86,6 +94,17 @@ pub const Vec3 = extern struct {
             p = Vec3.randomInRange(-1, 1);
             if (p.lengthSquared() < 1)
                 return p;
+        }
+    }
+
+    pub inline fn randomInUnitDisk() Vec3 {
+        while (true) {
+            const p = Vec3{
+                .x = rng.floatInRange(-1, 1),
+                .y = rng.floatInRange(-1, 1),
+                .z = 0,
+            };
+            if (p.lengthSquared() < 1) return p;
         }
     }
 

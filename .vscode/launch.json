@@ -6,7 +6,7 @@
     "configurations": [
         {
             "name": "Debug",
-            "type": "lldb-mi",
+            "type": "gdb",
             "request": "launch",
             "target": "./zig-out/bin/rtiow",
             "cwd": "${workspaceRoot}",
